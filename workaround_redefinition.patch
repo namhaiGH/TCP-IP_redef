@@ -1,0 +1,56 @@
+diff --git a/lwip-2.0.2/src/arch/netif.c b/lwip-2.0.2/src/arch/netif.c
+index 24b81e3..2148ad1 100644
+--- a/lwip-2.0.2/src/arch/netif.c
++++ b/lwip-2.0.2/src/arch/netif.c
+@@ -95,6 +95,8 @@ err_t net_init(char *ifname)
+   char errbuf[PCAP_ERRBUF_SIZE];
+   u8_t mac_addr[6];
+   char *dev;
++  pcap_if_t *alldevsp;
++  int ret_pcap;
+   ip_addr_t ip = {0};
+   ip_addr_t gw = {0};
+   ip_addr_t mask = {0};
+@@ -104,12 +106,27 @@ err_t net_init(char *ifname)
+   if (ifname == NULL)
+   {
+ _netdev_try:
+-    dev = pcap_lookupdev(errbuf);
+-    if(dev == NULL)
++    // dev = pcap_lookupdev(errbuf);
++    // if(dev == NULL)
++    // {
++    //   printf("PCAP locckup device error: %s\n", errbuf);
++    //   return ERR_IF;
++    // }
++    ret_pcap = pcap_findalldevs(&alldevsp, errbuf);
++    if (ret_pcap != 0)
+     {
+-      printf("PCAP locckup device error: %s\n", errbuf);
++      printf("PCAP find all devices error: %s\n", errbuf);
+       return ERR_IF;
+     }
++    if (alldevsp == NULL)
++    {
++      printf("PCAP no device found\n");
++      return ERR_IF;
++    }
++    else
++    {
++      dev = alldevsp->name;
++    }
+     printf("Found ethif: %s\n", dev);
+ 
+     /* Get the network address and mask */
+diff --git a/lwip-2.0.2/src/include/lwip/inet.h b/lwip-2.0.2/src/include/lwip/inet.h
+index 4a34f02..f9d119b 100644
+--- a/lwip-2.0.2/src/include/lwip/inet.h
++++ b/lwip-2.0.2/src/include/lwip/inet.h
+@@ -37,6 +37,7 @@
+  * Author: Adam Dunkels <adam@sics.se>
+  *
+  */
++#define LWIP_HDR_INET_H
+ #ifndef LWIP_HDR_INET_H
+ #define LWIP_HDR_INET_H
+ 
